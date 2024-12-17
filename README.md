@@ -18,9 +18,13 @@ Design and Data Structures - Class Design:
 4. CollisionDetector- Handles collision detection and response.
 
 Physics Equation:
+
 Equation of motion: F = ma
+
 Velocity update: v = v0 + at
+
 Position update: x = x0 + vt + 0.5at^2
+
 Collision response: based on conservation of momentum with rebound coefficients.
 
  Unit Testing - Developing core functionality using TDD:
