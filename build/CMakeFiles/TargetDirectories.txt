@@ -1,0 +1,3 @@
+/Users/f22/CLionProjects/RigidBodyDynamics/build/CMakeFiles/RigidBodyDynamics.dir
+/Users/f22/CLionProjects/RigidBodyDynamics/build/CMakeFiles/edit_cache.dir
+/Users/f22/CLionProjects/RigidBodyDynamics/build/CMakeFiles/rebuild_cache.dir
