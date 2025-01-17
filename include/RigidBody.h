@@ -1,3 +1,4 @@
+//RigidBody.h
 #ifndef RIGIDBODY_H
 #define RIGIDBODY_H
 
@@ -12,7 +13,7 @@ public:
 
     RigidBody();
     void applyForce(const glm::vec3& force);
-    void update(float deltaTime);
+    void integrate(float deltaTime);
 };
 
 #endif

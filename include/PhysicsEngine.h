@@ -1,12 +1,14 @@
+//PhysicsEngine.h
 #ifndef PHYSICSENGINE_H
 #define PHYSICSENGINE_H
 
-#include "RigidBody.h"
 #include <vector>
+#include <memory>
+#include "RigidBody.h"
 
 class PhysicsEngine {
 public:
-    static void update(std::vector<RigidBody*>& bodies, float deltaTime);
+    void update(std::vector<std::unique_ptr<RigidBody>>& bodies, float deltaTime);
 };
 
-#endif
+#endif // PHYSICSENGINE_H
