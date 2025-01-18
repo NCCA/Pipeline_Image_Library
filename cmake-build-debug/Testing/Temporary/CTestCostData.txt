@@ -1,3 +1,0 @@
-TestRigidBody 1 0.0107798
-TestWorld 1 0.00307415
----

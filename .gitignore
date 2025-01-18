@@ -1,0 +1,51 @@
+# Ignore compiled binary files
+*.o
+*.a
+*.so
+*.exe
+*.dll
+*.out
+
+# Ignore build directories
+build/
+cmake-build-debug/
+cmake-build-release/
+
+# Ignore CMake-generated files (except CMakeLists.txt)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.swp
+*.bak
+
+# Ignore dependency libraries (GLEW and GLFW)
+glew/build/
+/home/s5722414/local/usr/local/include/GL/
+/home/s5722414/local/usr/local/lib64/
+glfw/build/
+
+# Ignore IDE and editor configuration files
+.idea/
+.vscode/
+*.iml
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore shader compilation output
+shaders/*.spv
+shaders/*.bin
+
+# Ignore Google Test temporary files
+tests/gtest/*.log
+tests/gtest/tmp/
+
+# Ignore test build outputs
+tests/build/
