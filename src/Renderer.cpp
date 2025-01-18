@@ -5,7 +5,7 @@
 #include <sstream>
 
 GLuint loadShader(const char* vertexPath, const char* fragmentPath) {
-    // 读取和编译着色器代码
+    // Reading and compiling shader code
     std::ifstream vShaderFile(vertexPath);
     std::ifstream fShaderFile(fragmentPath);
 
@@ -23,7 +23,7 @@ GLuint loadShader(const char* vertexPath, const char* fragmentPath) {
     GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
 
-    // 编译和链接着色器程序
-    // 错误检查逻辑
-    return 0; // 返回着色器程序ID
+    // Compiling and linking shader programs
+    // Error checking logic
+    return 0; // Returns the shader program ID
 }
