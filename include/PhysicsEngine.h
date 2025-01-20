@@ -1,4 +1,4 @@
-//PhysicsEngine.h
+// PhysicsEngine.h
 #ifndef PHYSICSENGINE_H
 #define PHYSICSENGINE_H
 
@@ -11,4 +11,4 @@ public:
     void update(std::vector<std::unique_ptr<RigidBody>>& bodies, float deltaTime);
 };
 
-#endif // PHYSICSENGINE_H
+#endif

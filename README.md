@@ -1,5 +1,4 @@
 
-
 Rigid Body Dynamics Simulation
 
 Project Overview:

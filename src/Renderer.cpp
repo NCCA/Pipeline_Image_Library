@@ -1,29 +1,49 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "Renderer.h"
+#include <ngl/ShaderLib.h>
+#include <ngl/VAOPrimitives.h>
+#include <ngl/Mat4.h>
+#include <ngl/Transformation.h>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 
-GLuint loadShader(const char* vertexPath, const char* fragmentPath) {
-    // Reading and compiling shader code
-    std::ifstream vShaderFile(vertexPath);
-    std::ifstream fShaderFile(fragmentPath);
+Renderer::Renderer() {
+    std::cout << "Initializing Renderer..." << std::endl;
 
-    if (!vShaderFile.is_open() || !fShaderFile.is_open()) {
-        std::cerr << "Failed to open shader file(s)." << std::endl;
-        return 0;
+
+    ngl::VAOPrimitives::createSphere("sphere", 1.0f, 32); // Create the sphere
+}
+
+Renderer::~Renderer() {
+    std::cout << "Destroying Renderer..." << std::endl;
+}
+
+void Renderer::setViewMatrix(const ngl::Mat4 &viewMatrix) {
+    m_viewMatrix = viewMatrix;
+}
+
+void Renderer::setProjectionMatrix(const ngl::Mat4 &projectionMatrix) {
+    m_projectionMatrix = projectionMatrix;
+}
+
+void Renderer::render(const std::vector<std::unique_ptr<RigidBody>> &bodies) {
+    ngl::ShaderLib::use("nglDiffuseShader");
+
+    for (const auto &body : bodies) {
+        // 构造变换矩阵
+        ngl::Transformation transform;
+        transform.setPosition(ngl::Vec3(body->position.x, body->position.y, body->position.z));
+        transform.setRotation(body->rotationAxis.x * body->rotationAngle,
+                              body->rotationAxis.y * body->rotationAngle,
+                              body->rotationAxis.z * body->rotationAngle);
+
+        // Calculate the MVP matrix
+        ngl::Mat4 modelMatrix = transform.getMatrix();
+        ngl::Mat4 MVP = m_projectionMatrix * m_viewMatrix * modelMatrix;
+
+        // Setting uniform variables
+        ngl::ShaderLib::setUniform("MVP", MVP);
+        ngl::ShaderLib::setUniform("modelMatrix", modelMatrix);
+
+        // Draw the sphere
+        ngl::VAOPrimitives::draw("sphere");
     }
-
-    std::string vertexCode((std::istreambuf_iterator<char>(vShaderFile)), std::istreambuf_iterator<char>());
-    std::string fragmentCode((std::istreambuf_iterator<char>(fShaderFile)), std::istreambuf_iterator<char>());
-
-    const char* vShaderCode = vertexCode.c_str();
-    const char* fShaderCode = fragmentCode.c_str();
-
-    GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
-
-    // Compiling and linking shader programs
-    // Error checking logic
-    return 0; // Returns the shader program ID
 }

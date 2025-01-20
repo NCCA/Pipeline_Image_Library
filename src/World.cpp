@@ -6,19 +6,10 @@ void World::addRigidBody(std::unique_ptr<RigidBody> body) {
 
 void World::simulate(float deltaTime) {
     for (auto& body : bodies) {
-        body->integrate(deltaTime);
+        body->integrate(deltaTime); // Update rigid body position and velocity
     }
-}
 
-void World::printBodies() const {
-    for (size_t i = 0; i < bodies.size(); ++i) {
-        std::cout << "Body " << i + 1 << " position: "
-                  << bodies[i]->position.y << std::endl;
-    }
-}
-
-size_t World::getRigidBodyCount() const {
-    return bodies.size();
+    collisionDetector.detectCollisions(bodies); // Detect and resolve collisions
 }
 
 const std::vector<std::unique_ptr<RigidBody>>& World::getBodies() const {

@@ -3,19 +3,23 @@
 
 #include <vector>
 #include <memory>
-#include <iostream>
 #include "RigidBody.h"
+#include "CollisionDetector.h"
 
 class World {
 public:
+    //  // Add a rigid body to the world
     void addRigidBody(std::unique_ptr<RigidBody> body);
+
+    // Modelling the behaviour of the entire physical world
     void simulate(float deltaTime);
-    void printBodies() const;
-    size_t getRigidBodyCount() const;  // 提供刚体数量
-    const std::vector<std::unique_ptr<RigidBody>>& getBodies() const;  // 获取刚体列表
+
+    // Get list of rigid bodies (read-only access)
+    const std::vector<std::unique_ptr<RigidBody>>& getBodies() const;
 
 private:
-    std::vector<std::unique_ptr<RigidBody>> bodies;
+    std::vector<std::unique_ptr<RigidBody>> bodies;  // Save all rigid bodies
+    CollisionDetector collisionDetector;             // Collision Detector
 };
 
-#endif
+#endif // WORLD_H
