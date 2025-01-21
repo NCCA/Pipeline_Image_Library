@@ -28,7 +28,7 @@ void Renderer::render(const std::vector<std::unique_ptr<RigidBody>> &bodies) {
     ngl::ShaderLib::use("nglDiffuseShader");
 
     for (const auto &body : bodies) {
-        // 构造变换矩阵
+         // Construct the transformation matrix
         ngl::Transformation transform;
         transform.setPosition(ngl::Vec3(body->position.x, body->position.y, body->position.z));
         transform.setRotation(body->rotationAxis.x * body->rotationAngle,
