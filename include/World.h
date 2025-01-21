@@ -8,7 +8,7 @@
 
 class World {
 public:
-    //  // Add a rigid body to the world
+    // Add a rigid body to the world
     void addRigidBody(std::unique_ptr<RigidBody> body);
 
     // Modelling the behaviour of the entire physical world
