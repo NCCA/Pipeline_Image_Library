@@ -176,8 +176,9 @@ Opportunities for Improvement
 1.30dayscoding.com. (2024). Mastering Game Physics: Implementing Realistic Simulations. [Online] Available at: link.
 2.Bender, J., Erleben, K., and Trinkle, J. (2013). Interactive Simulation of Rigid Body Dynamics in Computer Graphics. Computer Graphics Forum, 33(1), pp.246–270. doi:https://doi.org/10.1111/cgf.12272.
 3.Featherstone, R. (2008). Rigid Body Dynamics Algorithms. [Online] Available at: link.
-## Concept Proof
 
+
+## Concept Proof
 ### Unit Tests
 1. **test_physics_engine**  
    Verifies physics calculations such as gravity application and collision responses.  
