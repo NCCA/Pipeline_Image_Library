@@ -161,24 +161,6 @@ Unit tests are included to ensure functionality:
 
 ---
 
-### Limitations and Future Work
-**Current Limitations
--AABB-based collision detection may result in false positives for complex scenes.
--Only simple impulse-based collision responses are implemented (elastic collisions).
--Rendering is limited to basic objects (spheres and a plane).
-Opportunities for Improvement
--Bounding Volume Hierarchies (BVH): To improve collision detection efficiency.
--Shock Propagation: To enhance stability for stacked or multi-contact scenarios.
--GUI: Add controls for spawning objects or tweaking parameters interactively.
--Shaders: Incorporate advanced shading techniques for improved visual effects.
-
-### References
-1.30dayscoding.com. (2024). Mastering Game Physics: Implementing Realistic Simulations. [Online] Available at: link.
-2.Bender, J., Erleben, K., and Trinkle, J. (2013). Interactive Simulation of Rigid Body Dynamics in Computer Graphics. Computer Graphics Forum, 33(1), pp.246–270. doi:https://doi.org/10.1111/cgf.12272.
-3.Featherstone, R. (2008). Rigid Body Dynamics Algorithms. [Online] Available at: link.
-
----
-
 ## Concept Proof
 ### Unit Tests
 1. **test_physics_engine**  
@@ -200,6 +182,24 @@ Opportunities for Improvement
 A simple application to render a ground plane and multiple spheres, allowing user interactions to dynamically add objects or debug distances.  
 
    ![result](assets/result.jpg)
+
+---
+
+### Limitations and Future Work
+**Current Limitations
+-AABB-based collision detection may result in false positives for complex scenes.
+-Only simple impulse-based collision responses are implemented (elastic collisions).
+-Rendering is limited to basic objects (spheres and a plane).
+Opportunities for Improvement
+-Bounding Volume Hierarchies (BVH): To improve collision detection efficiency.
+-Shock Propagation: To enhance stability for stacked or multi-contact scenarios.
+-GUI: Add controls for spawning objects or tweaking parameters interactively.
+-Shaders: Incorporate advanced shading techniques for improved visual effects.
+
+### References
+1.30dayscoding.com. (2024). Mastering Game Physics: Implementing Realistic Simulations. [Online] Available at: link.
+2.Bender, J., Erleben, K., and Trinkle, J. (2013). Interactive Simulation of Rigid Body Dynamics in Computer Graphics. Computer Graphics Forum, 33(1), pp.246–270. doi:https://doi.org/10.1111/cgf.12272.
+3.Featherstone, R. (2008). Rigid Body Dynamics Algorithms. [Online] Available at: link.
 
 ---
 
