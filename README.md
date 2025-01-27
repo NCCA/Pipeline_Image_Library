@@ -125,6 +125,8 @@ target_link_libraries(RigidBodyDynamics
   # Add other necessary libraries
 )
 
+---
+
 ## Installation and Usage
 
 ### Prerequisites
@@ -159,8 +161,8 @@ Unit tests are included to ensure functionality:
 
 Example Output
 When running the application, you should see a window displaying a ground plane and multiple spheres. Users can interact by:
-Pressing Spacebar to add new spheres.
-Pressing D Key to debug distances of objects from the ground.
+-Pressing Spacebar to add new spheres.
+-Pressing D Key to debug distances of objects from the ground.
 
 Limitations and Future Work
 Current Limitations
