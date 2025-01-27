@@ -1,24 +1,35 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef RENDERER_H_
+#define RENDERER_H_
 
-#include <memory>
 #include <vector>
+#include <memory>
+#include <glm/glm.hpp>
 #include "RigidBody.h"
-#include <ngl/Mat4.h>
+
+// Function declaration to generate random colors
+glm::vec3 generateRandomColor();
 
 class Renderer {
 public:
+    // Constructor and Destructor
     Renderer();
     ~Renderer();
 
-    void setViewMatrix(const ngl::Mat4 &viewMatrix);
-    void setProjectionMatrix(const ngl::Mat4 &projectionMatrix);
+    // Render function with three parameters (used for bodies rendering)
+    void render(const std::vector<std::unique_ptr<RigidBody>>& bodies,
+                const glm::mat4& view,
+                const glm::mat4& projection);
 
-    void render(const std::vector<std::unique_ptr<RigidBody>> &bodies);
+    // Render function with four parameters (used for bodies and ground rendering)
+    void render(const std::vector<std::unique_ptr<RigidBody>>& bodies,
+                const glm::mat4& view,
+                const glm::mat4& projection,
+                float groundTop);
 
-private:
-    ngl::Mat4 m_viewMatrix;
-    ngl::Mat4 m_projectionMatrix;
+    // Function to render the ground
+    void renderGround(float groundY, float halfSize,
+                      const glm::mat4& view,
+                      const glm::mat4& projection);
 };
 
-#endif
+#endif // RENDERER_H_

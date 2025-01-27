@@ -1,21 +1,29 @@
-#ifndef RIGIDBODY_H
-#define RIGIDBODY_H
+#ifndef RIGIDBODY_H_
+#define RIGIDBODY_H_
+
 #include <glm/glm.hpp>
+#include <cstdlib>
 
 class RigidBody {
 public:
-    glm::vec3 position;
-    glm::vec3 velocity;
-    glm::vec3 acceleration;
-    RigidBody();
-    float mass = 1.0f;
-    float radius = 1.0f; // Suppose the rigid body is a sphere
+    glm::vec3 position;     // Position of the rigid body
+    glm::vec3 velocity;     // Velocity of the rigid body
+    glm::vec3 acceleration; // Acceleration of the rigid body
+    glm::vec3 force;        // Applied force on the rigid body
+    glm::vec3 color;        // Random color assigned to the rigid body
+    float mass;             // Mass of the rigid body
+    float radius;           // Radius of the rigid body
+    float inverseMass;      // Inverse of the mass for efficiency in calculations
 
-    float rotationAngle = 0.0f; // // Rotation angle
-    glm::vec3 rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f); //Default rotation around the Y-axis
+    RigidBody();            // Default constructor
+    RigidBody(const glm::vec3& pos); // Constructor with initial position
 
     void applyForce(const glm::vec3& force);
     void integrate(float deltaTime);
+
+private:
+    glm::vec3 generateRandomColor();
+    void updateInverseMass();
 };
 
-#endif
+#endif // RIGIDBODY_H_

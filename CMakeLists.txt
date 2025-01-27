@@ -1,102 +1,120 @@
+# Set minimum required version of CMake
 cmake_minimum_required(VERSION 3.10)
 
-# Set OpenGL preference to GLVND
-if(POLICY CMP0072)
-    cmake_policy(SET CMP0072 NEW)
-endif()
+# Specify the vcpkg toolchain file
+set(CMAKE_TOOLCHAIN_FILE "/home/s5722414/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
+# Project details
 project(RigidBodyDynamics VERSION 1.0)
 
-# Set C++ standard
+# Set C++ standard to C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Set default build type to Debug
+# Set default build type to Release if not specified
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
+
+# Print project details to the console
+message(STATUS "Project Name: ${PROJECT_NAME}")
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 # Find required packages
 find_package(OpenGL REQUIRED)
-find_package(GTest REQUIRED)
-find_package(fmt REQUIRED)
+find_package(GLEW CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL2 REQUIRED sdl2)
 
-# Manually set GLFW include and library paths
-set(GLFW_INCLUDE_DIR /home/s5722414/glfw/include)
-set(GLFW_LIBRARY_DIR /home/s5722414/glfw/build/src)
-
-# Include directories
+# Include directories for header files
 include_directories(
         ${CMAKE_SOURCE_DIR}/include
-        /home/s5722414/glm
-        /home/s5722414/NGL/include
-        ${GLFW_INCLUDE_DIR}
+        ${SDL2_INCLUDE_DIRS}
+        ${GTEST_INCLUDE_DIRS}
 )
 
-# Link directories
+# Link directories for libraries
 link_directories(
-        /home/s5722414/NGL/lib            # NGL libraries
+        ${SDL2_LIBRARY_DIRS}
 )
 
-# Enable GLM experimental features
-add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
-
-# Add library
-add_library(RigidBodyLib
-        src/RigidBody.cpp
-        src/World.cpp
-        src/PhysicsEngine.cpp
+# Define the source files for the project
+set(SOURCE_FILES
+        src/AABB.cpp
         src/CollisionDetector.cpp
+        src/PhysicsEngine.cpp
         src/Renderer.cpp
+        src/RigidBody.cpp
+        src/Ground.cpp
+        src/World.cpp
+        src/main.cpp
 )
 
-# Link libraries to RigidBodyLib
-target_link_libraries(RigidBodyLib
-        OpenGL::GL
-        pthread
-        dl
-        NGL
-        fmt::fmt
-        ${GLFW_LIBRARY_DIR}/libglfw3.a
-)
+# Create the executable for the main application
+add_executable(RigidBodyDynamics ${SOURCE_FILES})
 
-# Add main executable
-add_executable(RigidBodyDynamics src/main.cpp)
-
-# Link libraries to RigidBodyDynamics
+# Link necessary libraries to the executable
 target_link_libraries(RigidBodyDynamics
-        RigidBodyLib
-        OpenGL::GL
-        pthread
+        PRIVATE
+        ${OPENGL_gl_LIBRARY}
+        ${SDL2_LIBRARIES}
+        GLEW::GLEW
         dl
-        fmt::fmt
-        ${GLFW_LIBRARY_DIR}/libglfw3.a
-        NGL
+        pthread
 )
 
 # Enable testing
 enable_testing()
 
-# Add Unit Test: RigidBody
-add_executable(test_rigidbody tests/test_rigidbody.cpp)
-target_include_directories(test_rigidbody PRIVATE include)
-target_link_libraries(test_rigidbody RigidBodyLib GTest::GTest GTest::Main pthread)
+# Define test sources for common files used in tests
+set(TEST_COMMON_SOURCES
+        src/AABB.cpp
+        src/RigidBody.cpp
+)
 
-# Add Unit Test: World
-add_executable(test_world tests/test_world.cpp)
-target_include_directories(test_world PRIVATE include)
-target_link_libraries(test_world RigidBodyLib GTest::GTest GTest::Main pthread)
+# Test for RigidBody
+add_executable(test_rigidbody
+        tests/test_rigidbody.cpp
+        ${TEST_COMMON_SOURCES}
+)
+target_link_libraries(test_rigidbody
+        PRIVATE
+        GTest::gtest_main
+        pthread
+)
+add_test(NAME TestRigidBody COMMAND test_rigidbody)
 
+# Test for PhysicsEngine
+add_executable(test_physics_engine
+        tests/test_physics_engine.cpp
+        src/PhysicsEngine.cpp
+        ${TEST_COMMON_SOURCES}
+)
+target_link_libraries(test_physics_engine
+        PRIVATE
+        GTest::gtest_main
+        pthread
+)
+add_test(NAME TestPhysicsEngine COMMAND test_physics_engine)
 
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_BUILD_RPATH /home/s5722414/NGL/lib)
-
-# Print build information for debugging
-message(STATUS "Project Name: ${PROJECT_NAME}")
-message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "GLM include directory: /home/s5722414/glm")
-message(STATUS "NGL include directory: /home/s5722414/NGL/include")
-message(STATUS "NGL library directory: /home/s5722414/NGL/lib")
-message(STATUS "GLFW include directory: ${GLFW_INCLUDE_DIR}")
-message(STATUS "GLFW library directory: ${GLFW_LIBRARY_DIR}")
+# Test for World
+add_executable(test_world
+        tests/test_world.cpp
+        src/World.cpp
+        src/CollisionDetector.cpp
+        src/PhysicsEngine.cpp
+        src/Ground.cpp
+        src/Renderer.cpp
+        ${TEST_COMMON_SOURCES}
+)
+target_link_libraries(test_world
+        PRIVATE
+        GTest::gtest_main
+        pthread
+        ${OPENGL_gl_LIBRARY}
+        ${SDL2_LIBRARIES}
+        GLEW::GLEW
+        dl
+)
+add_test(NAME TestWorld COMMAND test_world)  # Add test for World
