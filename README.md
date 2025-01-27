@@ -79,7 +79,7 @@ The project is implemented using an object-oriented design. Below is an overview
   Example console output when pressing D:
   Body 0 distance to ground = 3.42 Body 1 distance to ground = 7.89
 
----
+
 
 ---
 ## Build Configuration
@@ -177,6 +177,7 @@ Opportunities for Improvement
 2.Bender, J., Erleben, K., and Trinkle, J. (2013). Interactive Simulation of Rigid Body Dynamics in Computer Graphics. Computer Graphics Forum, 33(1), pp.246–270. doi:https://doi.org/10.1111/cgf.12272.
 3.Featherstone, R. (2008). Rigid Body Dynamics Algorithms. [Online] Available at: link.
 
+---
 
 ## Concept Proof
 ### Unit Tests
