@@ -81,6 +81,52 @@ The project is implemented using an object-oriented design. Below is an overview
 
 ---
 
+---
+## Build Configuration
+
+### Use of Absolute Paths
+
+In this project, **absolute paths** are utilized within the `CMakeLists.txt` and build scripts. The primary reasons for using absolute paths are:
+
+1. **Dependency Management**:
+ - Absolute paths ensure that the compiler and linker can reliably locate external libraries and dependencies, such as SDL2, GLEW, and OpenGL, especially when these libraries are installed in non-standard directories or managed by package managers like vcpkg.
+
+2. **Consistency Across Environments**:
+ - By specifying absolute paths, the build process remains consistent regardless of the current working directory, reducing the likelihood of build errors related to missing or incorrectly located dependencies.
+
+3. **Ease of Integration with External Tools**:
+ - Tools like vcpkg often provide absolute paths to installed libraries, making it straightforward to integrate these dependencies into the CMake build system without additional configuration.
+
+4. **Avoiding Relative Path Issues**:
+ - Relative paths can become problematic in complex projects with multiple nested directories. Absolute paths eliminate ambiguity, ensuring that the correct files and libraries are referenced.
+
+**Example in `CMakeLists.txt`**:
+```cmake
+# Specify the path to vcpkg toolchain file if using vcpkg for dependency management
+set(CMAKE_TOOLCHAIN_FILE "/public/devel/24-25/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+
+# Find packages using absolute paths
+find_package(OpenGL REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(GTest REQUIRED)
+
+# Include directories with absolute paths
+include_directories(/home/s5722414/Documents/RigidBodyDynamics/include)
+include_directories(/public/devel/24-25/vcpkg/installed/x64-linux/include)
+
+# Link libraries using absolute paths
+target_link_libraries(RigidBodyDynamics 
+  /public/devel/24-25/vcpkg/installed/x64-linux/lib/libGLEWd.a 
+  /usr/lib64/libGL.so 
+  /usr/lib64/libGLU.so 
+  /usr/lib64/libX11.so 
+  /usr/lib64/libXext.so 
+  /public/devel/24-25/vcpkg/installed/x64-linux/lib/libSDL2d.a
+  # Add other necessary libraries
+)
+
+
 ## Installation and Usage
 
 ### Prerequisites
@@ -115,6 +161,21 @@ Unit tests are included to ensure functionality:
 
 ---
 
+### Limitations and Future Work
+**Current Limitations
+-AABB-based collision detection may result in false positives for complex scenes.
+-Only simple impulse-based collision responses are implemented (elastic collisions).
+-Rendering is limited to basic objects (spheres and a plane).
+Opportunities for Improvement
+-Bounding Volume Hierarchies (BVH): To improve collision detection efficiency.
+-Shock Propagation: To enhance stability for stacked or multi-contact scenarios.
+-GUI: Add controls for spawning objects or tweaking parameters interactively.
+-Shaders: Incorporate advanced shading techniques for improved visual effects.
+
+### References
+1.30dayscoding.com. (2024). Mastering Game Physics: Implementing Realistic Simulations. [Online] Available at: link.
+2.Bender, J., Erleben, K., and Trinkle, J. (2013). Interactive Simulation of Rigid Body Dynamics in Computer Graphics. Computer Graphics Forum, 33(1), pp.246–270. doi:https://doi.org/10.1111/cgf.12272.
+3.Featherstone, R. (2008). Rigid Body Dynamics Algorithms. [Online] Available at: link.
 ## Concept Proof
 
 ### Unit Tests
