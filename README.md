@@ -125,7 +125,9 @@ target_link_libraries(RigidBodyDynamics
   # Add other necessary libraries
 )
 
-## Installation and Usage
+---
+
+### Installation and Usage
 
 ### Prerequisites
 
@@ -159,8 +161,8 @@ Unit tests are included to ensure functionality:
 
 Example Output
 When running the application, you should see a window displaying a ground plane and multiple spheres. Users can interact by:
-Pressing Spacebar to add new spheres.
-Pressing D Key to debug distances of objects from the ground.
+-Pressing Spacebar to add new spheres.
+-Pressing D Key to debug distances of objects from the ground.
 
 Limitations and Future Work
 Current Limitations
@@ -177,6 +179,53 @@ References
 1.30dayscoding.com. (2024). Mastering Game Physics: Implementing Realistic Simulations. [Online] Available at: link.
 2.Bender, J., Erleben, K., and Trinkle, J. (2013). Interactive Simulation of Rigid Body Dynamics in Computer Graphics. Computer Graphics Forum, 33(1), pp.246–270. doi:https://doi.org/10.1111/cgf.12272.
 3.Featherstone, R. (2008). Rigid Body Dynamics Algorithms. [Online] Available at: link.
+
+###
+ 
+Concept Proof
+![final](assets/RigidBodyDynamics.jpg)
+
+To demonstrate functionality, the following tests and examples are included:
+•	Unit Tests: 
+1. test_physics_engine
+•	Purpose: Verifies the correctness of physics calculations, including:
+o	Gravity application.
+o	Collision responses between objects.
+•	Key Test Cases:
+o	Ensuring that objects accelerate correctly under gravity.
+o	Validating impulse-based collision resolution.
+
+![test_PhysicsEngine](assets/test_physicsengine.jpg)
+
+2. test_world
+•	Purpose: Ensures that rigid bodies are properly added to the simulation world and rendering logic is functional.
+•	Key Test Cases:
+o	Adding rigid bodies dynamically.
+o	Checking that rendering of objects (ground and spheres) works as expected.
+
+![test_world](assets/test_world.jpg)
+
+3. test_rigidbody
+•	Purpose: Validates individual rigid body logic.
+•	Key Test Cases:
+o	Correct updating of rigid body positions and velocities after integration.
+o	Ensuring forces applied on rigid bodies update acceleration as expected.
+
+![test_rigidbody](assets/test_rigidbody.jpg)
+
+•	Basic Example: 
+Simple Application
+•	A basic example has been implemented to demonstrate:
+1.	Rendering of a ground plane and multiple spheres using OpenGL.
+2.	User interaction features:
+-	Spacebar: Dynamically add spheres with random positions and velocities.
+Added a new rigid body at (10.23, 15.0, -5.67), velocity=(2.4, -2.0, 1.5)
+-	D Key: Output distances of spheres from the ground in the console.
+Body 0 distance to ground = 3.42
+Body 1 distance to ground = 7.89
+
+![result](assets/result.jpg)
+
 
 ## License
 
