@@ -168,6 +168,9 @@ Unit tests are included to ensure functionality:
 ---
 
 ## Concept Proof
+
+![final](assets/RigidBodydynamics.jpg)
+
 ### Unit Tests
 1. **test_physics_engine**  
    Verifies physics calculations such as gravity application and collision responses.  
