@@ -154,11 +154,13 @@ Before running the project, ensure the following tools and libraries are install
 4.cd build
 5.cmake ..
 6.Build the project:
-7.cmake --build .
+7.cmake --build .  
+
 Running the Application
 Run the executable generated after building:
 ./RigidBodyDynamics
 Testing the Application
+
 Unit tests are included to ensure functionality:
 ./test_physics_engine
 ./test_world
