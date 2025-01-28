@@ -197,9 +197,10 @@ Opportunities for Improvement
 -Shaders: Incorporate advanced shading techniques for improved visual effects.
 
 ### References
-1.30dayscoding.com. (2024). Mastering Game Physics: Implementing Realistic Simulations. [Online] Available at: link.
+1.30dayscoding.com. (2024). Mastering Game Physics: Implementing Realistic Simulations. [online] Available at: https://30dayscoding.com/blog/game-physics-implementing-realistic-simulations [Accessed 25 Jan. 2025].
 2.Bender, J., Erleben, K., and Trinkle, J. (2013). Interactive Simulation of Rigid Body Dynamics in Computer Graphics. Computer Graphics Forum, 33(1), pp.246–270. doi:https://doi.org/10.1111/cgf.12272.
-3.Featherstone, R. (2008). Rigid Body Dynamics Algorithms. [Online] Available at: link.
+3.Featherstone, R. (2008). Rigid Body Dynamics Algorithms. [online] Available at: https://gaoyichao.com/Xiaotu/papers/2008%20-%20Rigid%20body%20dynamics%20algorithms.pdf [Accessed 25 Jan. 2025].
+4.NVIDIA (2007). Real-Time Rigid Body Simulation on GPUs. In: Nguyen, H., ed. GPU Gems 3: Programming Techniques for High-Performance Graphics and General-Purpose Computation. [online] Available at: https://developer.nvidia.com/gpugems/gpugems3/part-v-physics-simulation/chapter-29-real-time-rigid-body-simulation-gpus [Accessed 27 Jan. 2025].
 
 ---
 
