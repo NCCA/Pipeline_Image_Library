@@ -1,5 +1,5 @@
 # RigidBodyDynamics: A Simple Rigid Body Dynamics Simulation
-
+  ![result](assets/result.jpg)
 ## Project Description
 
 **RigidBodyDynamics** is a C++ project that simulates rigid body motion with real-time rendering using OpenGL. The simulation focuses on physically accurate dynamics, including collision detection and resolution, supported by Axis-Aligned Bounding Boxes (AABB) and impulse-based collision responses. It also provides interactive features for users to add objects or debug their behaviors dynamically.
