@@ -1,5 +1,5 @@
 # RigidBodyDynamics: A Simple Rigid Body Dynamics Simulation
-  ![result](assets/result.jpg)
+  
 ## Project Description
 
 **RigidBodyDynamics** is a C++ project that simulates rigid body motion with real-time rendering using OpenGL. The simulation focuses on physically accurate dynamics, including collision detection and resolution, supported by Axis-Aligned Bounding Boxes (AABB) and impulse-based collision responses. It also provides interactive features for users to add objects or debug their behaviors dynamically.
@@ -126,6 +126,8 @@ target_link_libraries(RigidBodyDynamics
   # Add other necessary libraries
 )
 
+```
+---
 
 ## Installation and Usage
 
@@ -138,8 +140,10 @@ Before running the project, ensure the following tools and libraries are install
 - **SDL2**: For window management.
 - **GLEW**: For OpenGL extensions.
 - **OpenGL**: For rendering graphics.
+  
+---
 
-### Building the Project
+## Building the Project
 
 1. Clone the repository:
  ```bash
@@ -159,6 +163,8 @@ Unit tests are included to ensure functionality:
 ./test_physics_engine
 ./test_world
 
+
+```
 ---
 
 ## Concept Proof
@@ -186,7 +192,7 @@ A simple application to render a ground plane and multiple spheres, allowing use
 ---
 
 ### Limitations and Future Work
-**Current Limitations
+Current Limitations
 -AABB-based collision detection may result in false positives for complex scenes.
 -Only simple impulse-based collision responses are implemented (elastic collisions).
 -Rendering is limited to basic objects (spheres and a plane).
@@ -195,6 +201,8 @@ Opportunities for Improvement
 -Shock Propagation: To enhance stability for stacked or multi-contact scenarios.
 -GUI: Add controls for spawning objects or tweaking parameters interactively.
 -Shaders: Incorporate advanced shading techniques for improved visual effects.
+
+---
 
 ### References
 1.30dayscoding.com. (2024). Mastering Game Physics: Implementing Realistic Simulations. [online] Available at: https://30dayscoding.com/blog/game-physics-implementing-realistic-simulations [Accessed 25 Jan. 2025].
@@ -205,5 +213,4 @@ Opportunities for Improvement
 ---
 
 ## License
-
 This project is licensed under the Apache License 2.0 - see the [LICENSE](./LICENSE) file for details.
