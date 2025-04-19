@@ -171,28 +171,28 @@ Unit tests are included to ensure functionality:
 
 ## Concept Proof
 
-![final](assets/RigidBodydynamics.jpg)
+![final](ASE_assignment/assets/RigidBodydynamics.jpg)
 
 ### Unit Tests
 1. **test_physics_engine**  
    Verifies physics calculations such as gravity application and collision responses.  
 
-   ![test_physics_engine](assets/test_physicsengine.jpg)
+   ![test_physics_engine](ASE_assignment/assets/test_physicsengine.jpg)
 
 2. **test_world**  
    Ensures rigid body addition and rendering logic work correctly.  
 
-   ![test_world](assets/test_world.jpg)
+   ![test_world](ASE_assignment/assets/test_world.jpg)
 
 3. **test_rigidbody**  
    Validates individual rigid body logic.  
 
-   ![test_rigidbody](assets/test_rigidbody.jpg)
+   ![test_rigidbody](ASE_assignment/assets/test_rigidbody.jpg)
 
 ### Basic Example
 A simple application to render a ground plane and multiple spheres, allowing user interactions to dynamically add objects or debug distances.  
 
-   ![result](assets/result.jpg)
+   ![result](ASE_assignment/assets/result.jpg)
 
 ---
 
