@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Moodboard Image Upload</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ImageLibrary</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
     .image-card img {
       max-width: 100%;
@@ -11,42 +12,78 @@
     }
   </style>
 </head>
-<body class="container mt-5">
-  <h1 class="mb-4">🖼️ Moodboard Image Upload</h1>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('index') }}">ImageLibrary</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link{% if request.endpoint=='index' %} active{% endif %}" 
+               aria-current="page" href="{{ url_for('index') }}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link{% if request.endpoint=='list_moodboards' %} active{% endif %}" 
+               href="{{ url_for('list_moodboards') }}">Boards</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-  <!-- Upload Form -->
-  <form method="POST" enctype="multipart/form-data" class="mb-4 row g-2 align-items-center">
-    <div class="col-auto">
-      <input type="file" name="image" class="form-control" required>
-    </div>
-    <div class="col-auto">
-      <input type="text" name="tags" class="form-control" placeholder="Add a label, e.g.cyberpunk, city" required>
-    </div>
-    <div class="col-auto">
-      <button type="submit" class="btn btn-primary">Upload</button>
-    </div>
-  </form>
+  <div class="container mt-5">
+    <h1 class="mb-4">ImageLibrary</h1>
 
-  <!-- Search Form -->
-  <form method="GET" action="/" class="mb-4">
-    <div class="input-group">
-      <input type="text" name="q" class="form-control" placeholder="Search keywords...">
-      <button type="submit" class="btn btn-outline-secondary">Search</button>
-    </div>
-  </form>
+    <!-- Upload Form -->
+    <form method="POST" enctype="multipart/form-data" class="row g-2 mb-4">
+      <div class="col-md-4">
+        <input type="file" name="image" class="form-control" required>
+      </div>
+      <div class="col-md-4">
+        <input type="text" name="tags" class="form-control"
+               placeholder="Add labels, e.g. cyberpunk, city">
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">Upload</button>
+      </div>
+    </form>
 
-  <!-- Image Grid -->
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
-    {% for filename, tags in images %}
+    <!-- Search Form -->
+    <form method="GET" action="{{ url_for('index') }}" class="mb-4">
+      <div class="input-group">
+        <input type="text" name="q" class="form-control"
+               placeholder="Search keywords..."
+               value="{{ request.args.get('q', '') }}">
+        <button type="submit" class="btn btn-outline-secondary">Search</button>
+      </div>
+    </form>
+
+    <!-- Image Grid -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+      {% for image in images %}
       <div class="col">
         <div class="card image-card h-100">
-          <img src="{{ url_for('static', filename='uploads/' ~ filename) }}" class="card-img-top" alt="image">
+          <img src="{{ url_for('static', filename='uploads/' ~ image['filename']) }}"
+               class="card-img-top" alt="{{ image['filename'] }}">
           <div class="card-body">
-            <p class="card-text"><strong>Tags:</strong> {{ tags }}</p>
+            <p class="card-text"><strong>Tags:</strong> {{ image['tags'] }}</p>
           </div>
         </div>
       </div>
-    {% endfor %}
+      {% endfor %}
+      {% if images|length == 0 %}
+      <div class="col-12">
+        <p class="text-muted">No images found.</p>
+      </div>
+      {% endif %}
+    </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

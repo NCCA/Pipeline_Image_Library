@@ -1,31 +1,28 @@
 import os
 import sqlite3
+import click
 from flask import Flask, request, render_template, redirect, url_for, g
 from werkzeug.utils import secure_filename
 
-def create_app(test_config=None):
-    # 1) Create the Flask application instance
-    app = Flask(__name__, instance_relative_config=True)
 
-    # 2) Default configuration: place the database file in the instance folder
+def create_app(test_config=None):
+    # Create and configure the app
+    app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'database.db'),
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static', 'uploads'),
     )
 
-    # 3) Override default configuration with test_config if provided
+    # Override config for testing
     if test_config is not None:
         app.config.update(test_config)
 
-    # 4) Ensure the instance folder and upload folder exist
-    try:
-        os.makedirs(app.instance_path, exist_ok=True)
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    except OSError:
-        pass
+    # Ensure instance and upload directories exist
+    os.makedirs(app.instance_path, exist_ok=True)
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-    # 5) Database connection helper, stored in flask.g
+    # Database helpers
     def get_db():
         if 'db' not in g:
             g.db = sqlite3.connect(
@@ -36,12 +33,11 @@ def create_app(test_config=None):
         return g.db
 
     @app.teardown_appcontext
-    def close_db(error):
+    def close_db(error=None):
         db = g.pop('db', None)
         if db is not None:
             db.close()
 
-    # 6) Initialize the database by creating the images table if it doesn't exist
     def init_db():
         db = get_db()
         db.executescript('''
@@ -51,23 +47,34 @@ def create_app(test_config=None):
                 tags TEXT,
                 uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
+            CREATE TABLE IF NOT EXISTS moodboards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT
+            );
+            CREATE TABLE IF NOT EXISTS moodboard_images (
+                moodboard_id INTEGER NOT NULL,
+                image_id INTEGER NOT NULL,
+                PRIMARY KEY (moodboard_id, image_id),
+                FOREIGN KEY (moodboard_id) REFERENCES moodboards(id) ON DELETE CASCADE,
+                FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE
+            );
         ''')
 
-    # Register a Flask CLI command 'init-db' to initialize the database
-    import click
     @app.cli.command('init-db')
     def init_db_command():
         """Initialize the database."""
         init_db()
         click.echo('Initialized the database.')
 
-    # 7) Routes: upload, search, and display images
+    # Routes
     @app.route('/', methods=['GET', 'POST'])
     def index():
         db = get_db()
 
+        # Handle upload
         if request.method == 'POST':
-            file = request.files['image']
+            file = request.files.get('image')
             tags = request.form.get('tags', '')
             if file:
                 filename = secure_filename(file.filename)
@@ -80,6 +87,7 @@ def create_app(test_config=None):
                 db.commit()
             return redirect(url_for('index'))
 
+        # Search or list all
         q = request.args.get('q', '')
         if q:
             images = db.execute(
@@ -87,14 +95,78 @@ def create_app(test_config=None):
                 (f'%{q}%',)
             ).fetchall()
         else:
-            images = db.execute('SELECT filename, tags FROM images').fetchall()
+            images = db.execute(
+                'SELECT filename, tags FROM images'
+            ).fetchall()
 
         return render_template('index.html', images=images)
+
+    @app.route('/moodboards')
+    def list_moodboards():
+        db = get_db()
+        moodboards = db.execute(
+            'SELECT id, name, description FROM moodboards'
+        ).fetchall()
+        return render_template('moodboards.html', moodboards=moodboards)
+
+    @app.route('/moodboards/create', methods=['GET', 'POST'])
+    def create_moodboard():
+        db = get_db()
+        if request.method == 'POST':
+            name = request.form['name']
+            description = request.form.get('description', '')
+            db.execute(
+                'INSERT INTO moodboards (name, description) VALUES (?, ?)',
+                (name, description)
+            )
+            db.commit()
+            return redirect(url_for('list_moodboards'))
+        return render_template('create_moodboard.html')
+
+    @app.route('/moodboards/<int:mid>', methods=['GET', 'POST'])
+    def moodboard_detail(mid):
+        db = get_db()
+        # Add image to moodboard
+        if request.method == 'POST':
+            image_id = int(request.form['image_id'])
+            db.execute('''
+                INSERT OR IGNORE INTO moodboard_images (moodboard_id, image_id)
+                VALUES (?, ?)
+            ''', (mid, image_id))
+            db.commit()
+            return redirect(url_for('moodboard_detail', mid=mid))
+
+        mb = db.execute(
+            'SELECT id, name, description FROM moodboards WHERE id=?',
+            (mid,)
+        ).fetchone()
+        all_images = db.execute(
+            'SELECT id, filename, tags FROM images'
+        ).fetchall()
+        mb_images = db.execute('''
+            SELECT images.id, images.filename, images.tags
+            FROM images JOIN moodboard_images 
+            ON images.id = moodboard_images.image_id
+            WHERE moodboard_images.moodboard_id=?
+        ''', (mid,)).fetchall()
+
+        return render_template(
+            'moodboard_detail.html',
+            moodboard=mb,
+            all_images=all_images,
+            mb_images=mb_images
+        )
 
     return app
 
 
-# 8) Entry point: create the app and run the development server
 if __name__ == '__main__':
     app = create_app()
+    # Ensure database is initialized at startup
+    with app.app_context():
+        try:
+            init = app.cli.commands['init-db']
+            init.callback()
+        except Exception:
+            pass
     app.run(debug=True)

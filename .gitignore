@@ -1,12 +1,6 @@
-# Python bytecode
-__pycache__/
-*.py[cod]
-# Virtual env
-venv/
-env/
-# Flask instance folder
+.venv/
 instance/
-# VS Code
-.vscode/
-# macOS
-.DS_Store
+__pycache__/
+.pytest_cache/
+.env
+.python-version
