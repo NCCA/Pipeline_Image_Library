@@ -1,9 +1,11 @@
 import os
 import sqlite3
 import click
-from flask import Flask, request, render_template, redirect, url_for, g
+from flask import Flask, request, render_template, redirect, url_for, g, flash
 from werkzeug.utils import secure_filename
 
+# Allowed file extensions for uploads
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def create_app(test_config=None):
     # Create and configure the app
@@ -67,27 +69,42 @@ def create_app(test_config=None):
         init_db()
         click.echo('Initialized the database.')
 
+    # Utility to check allowed file types
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
     # Routes
     @app.route('/', methods=['GET', 'POST'])
     def index():
         db = get_db()
 
-        # Handle upload
         if request.method == 'POST':
-            file = request.files.get('image')
+            # Check if file part is present
+            if 'image' not in request.files:
+                flash('No file part')
+                return redirect(request.url)
+            file = request.files['image']
             tags = request.form.get('tags', '')
-            if file:
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                db.execute(
-                    'INSERT INTO images (filename, tags) VALUES (?, ?)',
-                    (filename, tags)
-                )
-                db.commit()
+            # Check if a file was selected
+            if file.filename == '':
+                flash('No selected file')
+                return redirect(request.url)
+            # Validate file type
+            if not allowed_file(file.filename):
+                flash('Invalid file type')
+                return redirect(request.url)
+            # Save file and record in database
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            db.execute(
+                'INSERT INTO images (filename, tags) VALUES (?, ?)',
+                (filename, tags)
+            )
+            db.commit()
             return redirect(url_for('index'))
 
-        # Search or list all
+        # Search or list all images
         q = request.args.get('q', '')
         if q:
             images = db.execute(
@@ -126,7 +143,6 @@ def create_app(test_config=None):
     @app.route('/moodboards/<int:mid>', methods=['GET', 'POST'])
     def moodboard_detail(mid):
         db = get_db()
-        # Add image to moodboard
         if request.method == 'POST':
             image_id = int(request.form['image_id'])
             db.execute('''
@@ -145,8 +161,7 @@ def create_app(test_config=None):
         ).fetchall()
         mb_images = db.execute('''
             SELECT images.id, images.filename, images.tags
-            FROM images JOIN moodboard_images 
-            ON images.id = moodboard_images.image_id
+            FROM images JOIN moodboard_images  ON images.id = moodboard_images.image_id
             WHERE moodboard_images.moodboard_id=?
         ''', (mid,)).fetchall()
 
@@ -170,3 +185,4 @@ if __name__ == '__main__':
         except Exception:
             pass
     app.run(debug=True)
+

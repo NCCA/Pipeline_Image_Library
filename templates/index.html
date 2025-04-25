@@ -24,12 +24,10 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link{% if request.endpoint=='index' %} active{% endif %}" 
-               aria-current="page" href="{{ url_for('index') }}">Home</a>
+            <a class="nav-link{% if request.endpoint == 'index' %} active{% endif %}" aria-current="page" href="{{ url_for('index') }}">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link{% if request.endpoint=='list_moodboards' %} active{% endif %}" 
-               href="{{ url_for('list_moodboards') }}">Boards</a>
+            <a class="nav-link{% if request.endpoint == 'list_moodboards' %} active{% endif %}" href="{{ url_for('list_moodboards') }}">Boards</a>
           </li>
         </ul>
       </div>
@@ -37,6 +35,17 @@
   </nav>
 
   <div class="container mt-5">
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-warning">
+          {% for msg in messages %}
+            <p>{{ msg }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <h1 class="mb-4">ImageLibrary</h1>
 
     <!-- Upload Form -->
@@ -87,3 +96,4 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
