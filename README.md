@@ -136,7 +136,7 @@ podman-compose up -d --build
 
 1. Create a feature branch:
    ```bash
-git checkout -b feature/your-feature
+git checkout -b feature
 ```
 2. Commit your changes:
    ```bash
@@ -144,7 +144,7 @@ git commit -m "Add new feature"
 ```
 3. Push and open a Pull Request:
    ```bash
-git push origin feature/your-feature
+git push origin feature
 ```
 
 ## License
