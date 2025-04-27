@@ -1,4 +1,3 @@
-# tests/test_search_edge_cases.py
 
 import io
 import os

@@ -1,5 +1,8 @@
 # ImageLibrary
 
+[![Coverage Status](https://img.shields.io/badge/coverage-67%25-yellow)](https://github.com/NCCA/pipeline-project-Flora9822/actions)
+
+
 **ImageLibrary** is a web-based 2D image reference database inspired by PureRef. It allows users to upload, tag, search, and organize images into custom moodboards.
 
 ## Features
