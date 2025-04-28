@@ -132,6 +132,11 @@ Or with Podman:
 podman-compose up -d --build
 ```
 
+## Architecture
+
+For a detailed system overview, data flow, and ER diagrams, see [Architecture Documentation](docs/ARCHITECTURE.md).
+
+
 ## Contribution
 
 1. Create a feature branch:
