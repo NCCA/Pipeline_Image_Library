@@ -34,3 +34,4 @@ def test_delete_image(client, tmp_path):
 
     # The file should also be removed from the upload folder
     assert not (uploads / 'to_delete.png').exists()
+
