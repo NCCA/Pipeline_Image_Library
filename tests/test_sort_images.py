@@ -45,3 +45,4 @@ def test_sort_by_date_asc(client):
     response = client.get('/?sort=date_asc')
     # 'old.png' (oldest) should appear before 'new.png'
     assert response.data.index(b'old.png') < response.data.index(b'new.png')
+
