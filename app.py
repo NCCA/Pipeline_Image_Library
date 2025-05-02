@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 # Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+
 def create_app(test_config=None):
     # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -28,8 +29,7 @@ def create_app(test_config=None):
     def get_db():
         if 'db' not in g:
             g.db = sqlite3.connect(
-                app.config['DATABASE'],
-                detect_types=sqlite3.PARSE_DECLTYPES
+                app.config['DATABASE'], detect_types=sqlite3.PARSE_DECLTYPES
             )
             g.db.row_factory = sqlite3.Row
         return g.db
@@ -78,45 +78,62 @@ def create_app(test_config=None):
     def index():
         db = get_db()
 
+        # Handle upload
         if request.method == 'POST':
-            # Check if file part is present
             if 'image' not in request.files:
                 flash('No file part')
                 return redirect(request.url)
             file = request.files['image']
             tags = request.form.get('tags', '')
-            # Check if a file was selected
             if file.filename == '':
                 flash('No selected file')
                 return redirect(request.url)
-            # Validate file type
             if not allowed_file(file.filename):
                 flash('Invalid file type')
                 return redirect(request.url)
-            # Save file and record in database
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             db.execute(
-                'INSERT INTO images (filename, tags) VALUES (?, ?)',
-                (filename, tags)
+                'INSERT INTO images (filename, tags) VALUES (?, ?)', (filename, tags)
             )
             db.commit()
             return redirect(url_for('index'))
 
-        # Search or list all images
+        # Handle listing and search with sort
         q = request.args.get('q', '')
+        sort = request.args.get('sort', 'date_desc')
+        base_query = 'SELECT id, filename, tags, uploaded_at FROM images'
+        params = ()
         if q:
-            images = db.execute(
-                'SELECT filename, tags FROM images WHERE tags LIKE ?',
-                (f'%{q}%',)
-            ).fetchall()
-        else:
-            images = db.execute(
-                'SELECT filename, tags FROM images'
-            ).fetchall()
+            base_query += ' WHERE tags LIKE ?'
+            params = (f'%{q}%',)
+        order = 'ORDER BY uploaded_at DESC, id DESC'
+        if sort == 'date_asc':
+            order = 'ORDER BY uploaded_at ASC, id ASC'
+        elif sort == 'date_desc':
+            order = 'ORDER BY uploaded_at DESC, id DESC'
+        elif sort == 'name_asc':
+            order = 'ORDER BY LOWER(filename) ASC, id ASC'
+        elif sort == 'name_desc':
+            order = 'ORDER BY LOWER(filename) DESC, id DESC'
+        images = db.execute(f"{base_query} {order}", params).fetchall()
 
         return render_template('index.html', images=images)
+
+    @app.route('/delete/<int:image_id>', methods=['POST'])
+    def delete_image(image_id):
+        db = get_db()
+        row = db.execute('SELECT filename FROM images WHERE id = ?', (image_id,)).fetchone()
+        if row:
+            filename = row['filename']
+            db.execute('DELETE FROM images WHERE id = ?', (image_id,))
+            db.commit()
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            except OSError:
+                pass
+        return redirect(url_for('index'))
 
     @app.route('/moodboards')
     def list_moodboards():
@@ -145,39 +162,24 @@ def create_app(test_config=None):
         db = get_db()
         if request.method == 'POST':
             image_id = int(request.form['image_id'])
-            db.execute('''
-                INSERT OR IGNORE INTO moodboard_images (moodboard_id, image_id)
-                VALUES (?, ?)
-            ''', (mid, image_id))
+            db.execute('INSERT OR IGNORE INTO moodboard_images (moodboard_id, image_id) VALUES (?, ?)',
+                       (mid, image_id))
             db.commit()
             return redirect(url_for('moodboard_detail', mid=mid))
-
-        mb = db.execute(
-            'SELECT id, name, description FROM moodboards WHERE id=?',
-            (mid,)
-        ).fetchone()
-        all_images = db.execute(
-            'SELECT id, filename, tags FROM images'
+        mb = db.execute('SELECT id, name, description FROM moodboards WHERE id=?', (mid,)).fetchone()
+        all_images = db.execute('SELECT id, filename, tags FROM images').fetchall()
+        mb_images = db.execute(
+            'SELECT images.id, images.filename, images.tags FROM images '
+            'JOIN moodboard_images ON images.id = moodboard_images.image_id '
+            'WHERE moodboard_images.moodboard_id=?', (mid,)
         ).fetchall()
-        mb_images = db.execute('''
-            SELECT images.id, images.filename, images.tags
-            FROM images JOIN moodboard_images  ON images.id = moodboard_images.image_id
-            WHERE moodboard_images.moodboard_id=?
-        ''', (mid,)).fetchall()
-
-        return render_template(
-            'moodboard_detail.html',
-            moodboard=mb,
-            all_images=all_images,
-            mb_images=mb_images
-        )
+        return render_template('moodboard_detail.html', moodboard=mb, all_images=all_images, mb_images=mb_images)
 
     return app
 
 
 if __name__ == '__main__':
     app = create_app()
-    # Ensure database is initialized at startup
     with app.app_context():
         try:
             init = app.cli.commands['init-db']
