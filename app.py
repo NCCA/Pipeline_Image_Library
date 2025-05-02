@@ -7,7 +7,6 @@ from werkzeug.utils import secure_filename
 # Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-
 def create_app(test_config=None):
     # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -73,11 +72,10 @@ def create_app(test_config=None):
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-    # Routes
+    # Upload / list / search / sort images
     @app.route('/', methods=['GET', 'POST'])
     def index():
         db = get_db()
-
         # Handle upload
         if request.method == 'POST':
             if 'image' not in request.files:
@@ -95,20 +93,21 @@ def create_app(test_config=None):
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             db.execute(
-                'INSERT INTO images (filename, tags) VALUES (?, ?)', (filename, tags)
+                'INSERT INTO images (filename, tags) VALUES (?, ?)',
+                (filename, tags)
             )
             db.commit()
             return redirect(url_for('index'))
 
-        # Handle listing and search with sort
+        # Search and sort listing
         q = request.args.get('q', '')
         sort = request.args.get('sort', 'date_desc')
-        base_query = 'SELECT id, filename, tags, uploaded_at FROM images'
+        base_q = 'SELECT id, filename, tags, uploaded_at FROM images'
         params = ()
         if q:
-            base_query += ' WHERE tags LIKE ?'
+            base_q += ' WHERE tags LIKE ?'
             params = (f'%{q}%',)
-        order = 'ORDER BY uploaded_at DESC, id DESC'
+        # Determine order
         if sort == 'date_asc':
             order = 'ORDER BY uploaded_at ASC, id ASC'
         elif sort == 'date_desc':
@@ -117,14 +116,18 @@ def create_app(test_config=None):
             order = 'ORDER BY LOWER(filename) ASC, id ASC'
         elif sort == 'name_desc':
             order = 'ORDER BY LOWER(filename) DESC, id DESC'
-        images = db.execute(f"{base_query} {order}", params).fetchall()
-
+        else:
+            order = 'ORDER BY uploaded_at DESC, id DESC'
+        images = db.execute(f"{base_q} {order}", params).fetchall()
         return render_template('index.html', images=images)
 
+    # Delete an image
     @app.route('/delete/<int:image_id>', methods=['POST'])
     def delete_image(image_id):
         db = get_db()
-        row = db.execute('SELECT filename FROM images WHERE id = ?', (image_id,)).fetchone()
+        row = db.execute(
+            'SELECT filename FROM images WHERE id = ?', (image_id,)
+        ).fetchone()
         if row:
             filename = row['filename']
             db.execute('DELETE FROM images WHERE id = ?', (image_id,))
@@ -135,6 +138,7 @@ def create_app(test_config=None):
                 pass
         return redirect(url_for('index'))
 
+    # Moodboards list
     @app.route('/moodboards')
     def list_moodboards():
         db = get_db()
@@ -143,6 +147,7 @@ def create_app(test_config=None):
         ).fetchall()
         return render_template('moodboards.html', moodboards=moodboards)
 
+    # Create a new moodboard
     @app.route('/moodboards/create', methods=['GET', 'POST'])
     def create_moodboard():
         db = get_db()
@@ -157,23 +162,31 @@ def create_app(test_config=None):
             return redirect(url_for('list_moodboards'))
         return render_template('create_moodboard.html')
 
+    # View and add images to a moodboard
     @app.route('/moodboards/<int:mid>', methods=['GET', 'POST'])
     def moodboard_detail(mid):
         db = get_db()
         if request.method == 'POST':
-            image_id = int(request.form['image_id'])
-            db.execute('INSERT OR IGNORE INTO moodboard_images (moodboard_id, image_id) VALUES (?, ?)',
-                       (mid, image_id))
+            img_id = int(request.form['image_id'])
+            db.execute(
+                'INSERT OR IGNORE INTO moodboard_images (moodboard_id, image_id) VALUES (?, ?)',
+                (mid, img_id)
+            )
             db.commit()
             return redirect(url_for('moodboard_detail', mid=mid))
-        mb = db.execute('SELECT id, name, description FROM moodboards WHERE id=?', (mid,)).fetchone()
-        all_images = db.execute('SELECT id, filename, tags FROM images').fetchall()
-        mb_images = db.execute(
-            'SELECT images.id, images.filename, images.tags FROM images '
-            'JOIN moodboard_images ON images.id = moodboard_images.image_id '
+        mb = db.execute(
+            'SELECT id, name, description FROM moodboards WHERE id=?', (mid,)
+        ).fetchone()
+        all_imgs = db.execute('SELECT id, filename, tags FROM images').fetchall()
+        mb_imgs = db.execute(
+            'SELECT images.id, images.filename, images.tags FROM images ' 
+            'JOIN moodboard_images ON images.id = moodboard_images.image_id ' 
             'WHERE moodboard_images.moodboard_id=?', (mid,)
         ).fetchall()
-        return render_template('moodboard_detail.html', moodboard=mb, all_images=all_images, mb_images=mb_images)
+        return render_template(
+            'moodboard_detail.html', moodboard=mb,
+            all_images=all_imgs, mb_images=mb_imgs
+        )
 
     return app
 
@@ -182,8 +195,7 @@ if __name__ == '__main__':
     app = create_app()
     with app.app_context():
         try:
-            init = app.cli.commands['init-db']
-            init.callback()
+            app.cli.commands['init-db'].callback()
         except Exception:
             pass
     app.run(debug=True)
