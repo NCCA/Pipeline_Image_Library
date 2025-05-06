@@ -154,12 +154,13 @@ def create_app(test_config=None):
         if request.method == 'POST':
             name = request.form['name']
             description = request.form.get('description', '')
-            db.execute(
+            cursor = db.execute(
                 'INSERT INTO moodboards (name, description) VALUES (?, ?)',
                 (name, description)
             )
             db.commit()
-            return redirect(url_for('list_moodboards'))
+            new_id = cursor.lastrowid
+            return redirect(url_for('moodboard_detail', mid=new_id))
         return render_template('create_moodboard.html')
 
     # View and add images to a moodboard
@@ -199,4 +200,3 @@ if __name__ == '__main__':
         except Exception:
             pass
     app.run(debug=True)
-
