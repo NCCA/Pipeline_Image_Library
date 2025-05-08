@@ -7,9 +7,11 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 
+# Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def create_app(test_config=None):
+    """Create and configure the Flask application."""
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
@@ -17,12 +19,17 @@ def create_app(test_config=None):
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static', 'uploads'),
     )
 
+    # Override config for tests
     if test_config:
         app.config.update(test_config)
 
+    # Ensure instance and upload folders exist
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+    # ----------------------
+    # Database helpers
+    # ----------------------
     def get_db():
         if 'db' not in g:
             g.db = sqlite3.connect(
@@ -34,7 +41,8 @@ def create_app(test_config=None):
     @app.teardown_appcontext
     def close_db(error=None):
         db = g.pop('db', None)
-        if db: db.close()
+        if db is not None:
+            db.close()
 
     def init_db():
         db = get_db()
@@ -61,14 +69,22 @@ def create_app(test_config=None):
 
     @app.cli.command('init-db')
     def init_db_command():
+        """Initialize the database from the command line."""
         init_db()
         click.echo('Initialized the database.')
 
+    # ----------------------
+    # Utility
+    # ----------------------
     def allowed_file(filename):
         return (
             '.' in filename and
             filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
         )
+
+    # ----------------------
+    # Routes
+    # ----------------------
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -77,7 +93,7 @@ def create_app(test_config=None):
         if request.method == 'POST':
             tags = request.form.get('tags', '')
 
-            # 多文件上传字段
+            # 1) Bulk upload (field name="images" + multiple)
             files = request.files.getlist('images')
             if files and any(f.filename for f in files):
                 for file in files:
@@ -91,10 +107,11 @@ def create_app(test_config=None):
                 db.commit()
                 return redirect(url_for('index'))
 
-            # 单文件上传字段（兼容旧测试）
+            # 2) Single-file upload (field name="image")
             if 'image' not in request.files:
                 flash('No file part')
                 return redirect(request.url)
+
             file = request.files['image']
             if file.filename == '':
                 flash('No selected file')
@@ -102,6 +119,7 @@ def create_app(test_config=None):
             if not allowed_file(file.filename):
                 flash('Invalid file type')
                 return redirect(request.url)
+
             fn = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
             db.execute(
@@ -111,7 +129,7 @@ def create_app(test_config=None):
             db.commit()
             return redirect(url_for('index'))
 
-        # GET：搜索、排序
+        # GET: handle search & sort
         q = request.args.get('q', '')
         sort = request.args.get('sort', 'date_desc')
         base_q = 'SELECT id, filename, tags, uploaded_at FROM images'
@@ -153,8 +171,10 @@ def create_app(test_config=None):
     @app.route('/moodboards')
     def list_moodboards():
         db = get_db()
-        mbs = db.execute('SELECT id, name, description FROM moodboards').fetchall()
-        return render_template('moodboards.html', moodboards=mbs)
+        moodboards = db.execute(
+            'SELECT id, name, description FROM moodboards'
+        ).fetchall()
+        return render_template('moodboards.html', moodboards=moodboards)
 
     @app.route('/moodboards/create', methods=['GET', 'POST'])
     def create_moodboard():
@@ -185,8 +205,8 @@ def create_app(test_config=None):
         mb = db.execute(
             'SELECT id, name, description FROM moodboards WHERE id = ?', (mid,)
         ).fetchone()
-        all_imgs = db.execute('SELECT id, filename, tags FROM images').fetchall()
-        mb_imgs = db.execute('''
+        all_images = db.execute('SELECT id, filename, tags FROM images').fetchall()
+        mb_images = db.execute('''
             SELECT images.id, images.filename, images.tags
             FROM images JOIN moodboard_images
               ON images.id = moodboard_images.image_id
@@ -196,8 +216,8 @@ def create_app(test_config=None):
         return render_template(
             'moodboard_detail.html',
             moodboard=mb,
-            all_images=all_imgs,
-            mb_images=mb_imgs
+            all_images=all_images,
+            mb_images=mb_images
         )
 
     return app
