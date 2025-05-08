@@ -1,11 +1,15 @@
 import os
 import sqlite3
 import click
-from flask import Flask, request, render_template, redirect, url_for, g, flash
+from flask import (
+    Flask, request, render_template, redirect,
+    url_for, g, flash
+)
 from werkzeug.utils import secure_filename
 
 # Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 
 def create_app(test_config=None):
     # Create and configure the app
@@ -70,36 +74,33 @@ def create_app(test_config=None):
 
     # Utility to check allowed file types
     def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        return (
+            '.' in filename and
+            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        )
 
-    # Upload / list / search / sort images
+    # Routes
+
     @app.route('/', methods=['GET', 'POST'])
     def index():
         db = get_db()
-        # Handle upload
-        if request.method == 'POST':
-            if 'image' not in request.files:
-                flash('No file part')
-                return redirect(request.url)
-            file = request.files['image']
-            tags = request.form.get('tags', '')
-            if file.filename == '':
-                flash('No selected file')
-                return redirect(request.url)
-            if not allowed_file(file.filename):
-                flash('Invalid file type')
-                return redirect(request.url)
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            db.execute(
-                'INSERT INTO images (filename, tags) VALUES (?, ?)',
-                (filename, tags)
-            )
-            db.commit()
-            return redirect(url_for('index'))
 
-        # Search and sort listing
+        # Handle bulk upload
+        if request.method == 'POST':
+            tags = request.form.get('tags', '')
+            files = request.files.getlist('images')
+            for file in files:
+                if file and file.filename and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    db.execute(
+                        'INSERT INTO images (filename, tags) VALUES (?, ?)',
+                        (filename, tags)
+                    )
+            db.commit()
+            return ('', 200)
+
+        # Search & sort
         q = request.args.get('q', '')
         sort = request.args.get('sort', 'date_desc')
         base_q = 'SELECT id, filename, tags, uploaded_at FROM images'
@@ -107,7 +108,6 @@ def create_app(test_config=None):
         if q:
             base_q += ' WHERE tags LIKE ?'
             params = (f'%{q}%',)
-        # Determine order
         if sort == 'date_asc':
             order = 'ORDER BY uploaded_at ASC, id ASC'
         elif sort == 'date_desc':
@@ -119,14 +119,15 @@ def create_app(test_config=None):
         else:
             order = 'ORDER BY uploaded_at DESC, id DESC'
         images = db.execute(f"{base_q} {order}", params).fetchall()
+
         return render_template('index.html', images=images)
 
-    # Delete an image
     @app.route('/delete/<int:image_id>', methods=['POST'])
     def delete_image(image_id):
         db = get_db()
         row = db.execute(
-            'SELECT filename FROM images WHERE id = ?', (image_id,)
+            'SELECT filename FROM images WHERE id = ?',
+            (image_id,)
         ).fetchone()
         if row:
             filename = row['filename']
@@ -138,7 +139,6 @@ def create_app(test_config=None):
                 pass
         return redirect(url_for('index'))
 
-    # Moodboards list
     @app.route('/moodboards')
     def list_moodboards():
         db = get_db()
@@ -147,7 +147,6 @@ def create_app(test_config=None):
         ).fetchall()
         return render_template('moodboards.html', moodboards=moodboards)
 
-    # Create a new moodboard
     @app.route('/moodboards/create', methods=['GET', 'POST'])
     def create_moodboard():
         db = get_db()
@@ -159,34 +158,41 @@ def create_app(test_config=None):
                 (name, description)
             )
             db.commit()
-            new_id = cursor.lastrowid
-            return redirect(url_for('moodboard_detail', mid=new_id))
+            return redirect(url_for('moodboard_detail', mid=cursor.lastrowid))
         return render_template('create_moodboard.html')
 
-    # View and add images to a moodboard
     @app.route('/moodboards/<int:mid>', methods=['GET', 'POST'])
     def moodboard_detail(mid):
         db = get_db()
         if request.method == 'POST':
-            img_id = int(request.form['image_id'])
-            db.execute(
-                'INSERT OR IGNORE INTO moodboard_images (moodboard_id, image_id) VALUES (?, ?)',
-                (mid, img_id)
-            )
+            image_id = int(request.form['image_id'])
+            db.execute('''
+                INSERT OR IGNORE INTO moodboard_images 
+                (moodboard_id, image_id) VALUES (?, ?)
+            ''', (mid, image_id))
             db.commit()
             return redirect(url_for('moodboard_detail', mid=mid))
+
         mb = db.execute(
-            'SELECT id, name, description FROM moodboards WHERE id=?', (mid,)
+            'SELECT id, name, description FROM moodboards WHERE id = ?',
+            (mid,)
         ).fetchone()
-        all_imgs = db.execute('SELECT id, filename, tags FROM images').fetchall()
-        mb_imgs = db.execute(
-            'SELECT images.id, images.filename, images.tags FROM images ' 
-            'JOIN moodboard_images ON images.id = moodboard_images.image_id ' 
-            'WHERE moodboard_images.moodboard_id=?', (mid,)
+        all_images = db.execute(
+            'SELECT id, filename, tags FROM images'
         ).fetchall()
+        mb_images = db.execute('''
+            SELECT images.id, images.filename, images.tags
+            FROM images
+            JOIN moodboard_images 
+            ON images.id = moodboard_images.image_id
+            WHERE moodboard_images.moodboard_id = ?
+        ''', (mid,)).fetchall()
+
         return render_template(
-            'moodboard_detail.html', moodboard=mb,
-            all_images=all_imgs, mb_images=mb_imgs
+            'moodboard_detail.html',
+            moodboard=mb,
+            all_images=all_images,
+            mb_images=mb_images
         )
 
     return app
