@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,31 +6,45 @@
   <title>ImageLibrary</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
-    .image-card img {
-      max-width: 100%;
-      height: auto;
+    body {
+      background-color: #f8f9fa;
+    }
+    .navbar-brand {
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .card.image-card {
+      border: none;
+      border-radius: .75rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform .2s;
+    }
+    .card.image-card:hover {
+      transform: translateY(-4px);
     }
     #upload-progress {
-    transition: width 0.5s ease;
+      transition: width 0.5s ease;
     }
   </style>
 </head>
 <body>
   <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container-fluid">
-      <a class="navbar-brand" href="{{ url_for('index') }}">ImageLibrary</a>
+      <a class="navbar-brand text-primary" href="{{ url_for('index') }}">ImageLibrary</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link{% if request.endpoint == 'index' %} active{% endif %}" aria-current="page" href="{{ url_for('index') }}">Home</a>
+            <a class="nav-link{% if request.endpoint == 'index' %} active text-primary{% endif %}"
+               href="{{ url_for('index') }}">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link{% if request.endpoint == 'list_moodboards' %} active{% endif %}" href="{{ url_for('list_moodboards') }}">Boards</a>
+            <a class="nav-link{% if request.endpoint == 'list_moodboards' %} active text-primary{% endif %}"
+               href="{{ url_for('list_moodboards') }}">Boards</a>
           </li>
         </ul>
       </div>
@@ -42,81 +55,110 @@
     <!-- Flash messages -->
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div class="alert alert-warning">
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
           {% for msg in messages %}
-            <p>{{ msg }}</p>
+            <div>{{ msg }}</div>
           {% endfor %}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       {% endif %}
     {% endwith %}
 
-<h1 class="mb-4">ImageLibrary</h1>
-
-<!-- Upload Form -->
-<form id="upload-form" method="POST" enctype="multipart/form-data" class="row g-2 mb-4">
-  <div class="col-md-4">
-    <input type="file" name="images" class="form-control" multiple required>
-  </div>
-  <div class="col-md-4">
-    <input type="text" name="tags" class="form-control" placeholder="Add labels, e.g. cyberpunk, city">
-  </div>
-  <div class="col-md-4">
-    <button type="submit" class="btn btn-primary w-100">Bulk Upload</button>
-  </div>
-</form>
-
-<!-- Progress Bar -->
-<div class="progress mb-4" style="height: 20px; display: none;">
-  <div id="upload-progress" class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
-</div>
-
-<!-- Search & Sort Form -->
-<form method="GET" action="{{ url_for('index') }}" class="mb-4 row g-2">
-  <div class="col-md-6">
-    <div class="input-group">
-      <input type="text" name="q" class="form-control" placeholder="Search keywords..." value="{{ request.args.get('q', '') }}">
-      <button type="submit" class="btn btn-outline-secondary">Search</button>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <select name="sort" class="form-select">
-      <option value="date_desc" {% if request.args.get('sort')=='date_desc' %}selected{% endif %}>Date ↓</option>
-      <option value="date_asc" {% if request.args.get('sort')=='date_asc' %}selected{% endif %}>Date ↑</option>
-      <option value="name_asc" {% if request.args.get('sort')=='name_asc' %}selected{% endif %}>Name ↑</option>
-      <option value="name_desc" {% if request.args.get('sort')=='name_desc' %}selected{% endif %}>Name ↓</option>
-    </select>
-  </div>
-  <div class="col-md-3">
-    <button type="submit" class="btn btn-outline-secondary w-100">Apply</button>
-  </div>
-</form>
-
-<!-- Image Grid -->
-<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
-  {% for image in images %}
-  <div class="col">
-    <div class="card image-card h-100">
-      <img src="{{ url_for('static', filename='uploads/' ~ image['filename']) }}" class="card-img-top" alt="{{ image['filename'] }}">
-      <div class="card-body d-flex justify-content-between align-items-center">
-        <p class="card-text mb-0"><strong>Tags:</strong> {{ image['tags'] }}</p>
-        <form method="POST" action="{{ url_for('delete_image', image_id=image['id']) }}" onsubmit="return confirm('Delete this image?');">
-          <button type="submit" class="btn btn-sm btn-danger">&times;</button>
-        </form>
+    <!-- Upload Form -->
+    <div class="card mb-4 p-3 shadow-sm bg-white rounded">
+      <h1 class="mb-4 text-primary">ImageLibrary</h1>
+      <form id="upload-form" method="POST" enctype="multipart/form-data" class="row g-2">
+        <div class="col-md-5">
+          <input type="file" name="images" class="form-control" multiple required>
+        </div>
+        <div class="col-md-5">
+          <input type="text" name="tags" class="form-control"
+                 placeholder="Add labels, e.g. cyberpunk, city">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">Upload</button>
+        </div>
+      </form>
+      <div class="progress mt-3 mb-1" style="height: 20px; display: none;">
+        <div id="upload-progress" class="progress-bar bg-primary" role="progressbar" style="width: 0%">0%</div>
       </div>
     </div>
-  </div>
-  {% endfor %}
-  {% if images|length == 0 %}
-  <div class="col-12">
-    <p class="text-muted">No images found.</p>
-  </div>
-  {% endif %}
-</div>
+
+    <!-- Search & Sort -->
+    <div class="card mb-4 p-3 shadow-sm bg-white rounded">
+      <form method="GET" action="{{ url_for('index') }}" class="row g-2 align-items-center">
+        <div class="col-md-6">
+          <div class="input-group">
+            <input type="text" name="q" class="form-control"
+                   placeholder="Search keywords..." value="{{ q }}">
+            <button type="submit" class="btn btn-outline-primary">Search</button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <select name="sort" class="form-select">
+            <option value="date_desc" {% if sort=='date_desc' %}selected{% endif %}>Date ↓</option>
+            <option value="date_asc"  {% if sort=='date_asc'  %}selected{% endif %}>Date ↑</option>
+            <option value="name_asc"  {% if sort=='name_asc'  %}selected{% endif %}>Name ↑</option>
+            <option value="name_desc" {% if sort=='name_desc' %}selected{% endif %}>Name ↓</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-outline-primary w-100">Apply</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Image Grid -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+      {% for image in images %}
+      <div class="col">
+        <div class="card image-card">
+          <img src="{{ url_for('static', filename='uploads/' ~ image.filename) }}"
+               class="card-img-top rounded-top"
+               alt="{{ image.filename }}">
+          <div class="card-body">
+            <p class="card-text mb-2"><strong>Tags:</strong> {{ image.tags }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">{{ image.uploaded_at[:10] }}</small>
+              <form method="POST"
+                    action="{{ url_for('delete_image', image_id=image.id) }}"
+                    onsubmit="return confirm('Delete this image?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% if images|length == 0 %}
+      <div class="col-12 text-center text-muted">
+        No images found.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center">
+        <li class="page-item{% if page <= 1 %} disabled{% endif %}">
+          <a class="page-link" href="?page={{ page-1 }}&q={{ q }}&sort={{ sort }}">«</a>
+        </li>
+        {% for p in range(1, total_pages+1) %}
+        <li class="page-item{% if p == page %} active{% endif %}">
+          <a class="page-link" href="?page={{ p }}&q={{ q }}&sort={{ sort }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item{% if page >= total_pages %} disabled{% endif %}">
+          <a class="page-link" href="?page={{ page+1 }}&q={{ q }}&sort={{ sort }}">»</a>
+        </li>
+      </ul>
+    </nav>
+    {% endif %}
 
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
     const form = document.getElementById('upload-form');
     const progressWrapper = document.querySelector('.progress');
@@ -138,20 +180,15 @@
       };
 
       xhr.onload = function() {
-        if (xhr.status === 200) {
-        setTimeout(() => window.location.reload(), 500);
-        } else if (xhr.status === 302) {
-        setTimeout(() => {
-        window.location.href = xhr.getResponseHeader('Location') || '/';
-        }, 500);
-          } else {
+        if (xhr.status === 200 || xhr.status === 302) {
+          setTimeout(() => window.location.reload(), 500);
+        } else {
           alert('Upload failed: ' + xhr.status);
-          }
-        };
+        }
+      };
 
       xhr.send(formData);
     });
   </script>
-
 </body>
 </html>

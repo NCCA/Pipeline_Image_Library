@@ -2,12 +2,11 @@ import os
 import sqlite3
 import click
 from flask import (
-    Flask, request, render_template, redirect,
-    url_for, g, flash
+    Flask, request, render_template,
+    redirect, url_for, g, flash
 )
 from werkzeug.utils import secure_filename
 
-# Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def create_app(test_config=None):
@@ -19,32 +18,31 @@ def create_app(test_config=None):
         UPLOAD_FOLDER=os.path.join(app.root_path, 'static', 'uploads'),
     )
 
-    # Override config for tests
     if test_config:
         app.config.update(test_config)
 
-    # Ensure instance and upload folders exist
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-    # ----------------------
-    # Database helpers
-    # ----------------------
     def get_db():
+        """Open a database connection if there isn't one yet."""
         if 'db' not in g:
             g.db = sqlite3.connect(
-                app.config['DATABASE'], detect_types=sqlite3.PARSE_DECLTYPES
+                app.config['DATABASE'],
+                detect_types=sqlite3.PARSE_DECLTYPES
             )
             g.db.row_factory = sqlite3.Row
         return g.db
 
     @app.teardown_appcontext
     def close_db(error=None):
+        """Close the database again at the end of the request."""
         db = g.pop('db', None)
-        if db is not None:
+        if db:
             db.close()
 
     def init_db():
+        """Initialize the database tables."""
         db = get_db()
         db.executescript('''
             CREATE TABLE IF NOT EXISTS images (
@@ -69,22 +67,16 @@ def create_app(test_config=None):
 
     @app.cli.command('init-db')
     def init_db_command():
-        """Initialize the database from the command line."""
+        """CLI command to initialize the database."""
         init_db()
         click.echo('Initialized the database.')
 
-    # ----------------------
-    # Utility
-    # ----------------------
     def allowed_file(filename):
+        """Check that the uploaded file has an allowed image extension."""
         return (
             '.' in filename and
             filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
         )
-
-    # ----------------------
-    # Routes
-    # ----------------------
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -93,25 +85,33 @@ def create_app(test_config=None):
         if request.method == 'POST':
             tags = request.form.get('tags', '')
 
-            # 1) Bulk upload (field name="images" + multiple)
-            files = request.files.getlist('images')
-            if files and any(f.filename for f in files):
-                for file in files:
-                    if file and allowed_file(file.filename):
-                        fn = secure_filename(file.filename)
-                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
-                        db.execute(
-                            'INSERT INTO images (filename, tags) VALUES (?, ?)',
-                            (fn, tags)
-                        )
+            # 1) Bulk upload first
+            if 'images' in request.files:
+                files = request.files.getlist('images')
+                # No filenames at all?
+                if not any(f.filename for f in files):
+                    flash('No selected file')
+                    return redirect(request.url)
+                # Any invalid extension?
+                for f in files:
+                    if f and f.filename and not allowed_file(f.filename):
+                        flash('Invalid file type')
+                        return redirect(request.url)
+                # save them
+                for f in files:
+                    fn = secure_filename(f.filename)
+                    f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
+                    db.execute(
+                        'INSERT INTO images (filename, tags) VALUES (?, ?)',
+                        (fn, tags)
+                    )
                 db.commit()
                 return redirect(url_for('index'))
 
-            # 2) Single-file upload (field name="image")
+            # 2) Fallback to single-file upload
             if 'image' not in request.files:
                 flash('No file part')
                 return redirect(request.url)
-
             file = request.files['image']
             if file.filename == '':
                 flash('No selected file')
@@ -129,13 +129,18 @@ def create_app(test_config=None):
             db.commit()
             return redirect(url_for('index'))
 
-        # GET: handle search & sort
+        # GET: pagination, search & sort
+        page = max(1, int(request.args.get('page', 1)))
+        per_page = 20
+        offset = (page - 1) * per_page
+
         q = request.args.get('q', '')
         sort = request.args.get('sort', 'date_desc')
-        base_q = 'SELECT id, filename, tags, uploaded_at FROM images'
+
+        base = 'SELECT id, filename, tags, uploaded_at FROM images'
         params = ()
         if q:
-            base_q += ' WHERE tags LIKE ?'
+            base += ' WHERE tags LIKE ?'
             params = (f'%{q}%',)
 
         if sort == 'date_asc':
@@ -149,35 +154,54 @@ def create_app(test_config=None):
         else:
             order = 'ORDER BY uploaded_at DESC, id DESC'
 
-        images = db.execute(f"{base_q} {order}", params).fetchall()
-        return render_template('index.html', images=images)
+        images = db.execute(
+            f"{base} {order} LIMIT ? OFFSET ?",
+            params + (per_page, offset)
+        ).fetchall()
+        total = db.execute(
+            f"SELECT COUNT(*) FROM images" + (' WHERE tags LIKE ?' if q else ''),
+            params
+        ).fetchone()[0]
+        total_pages = max(1, (total + per_page - 1) // per_page)
+
+        return render_template(
+            'index.html',
+            images=images,
+            page=page,
+            total_pages=total_pages,
+            q=q,
+            sort=sort
+        )
 
     @app.route('/delete/<int:image_id>', methods=['POST'])
     def delete_image(image_id):
+        """Delete an image record and its file."""
         db = get_db()
         row = db.execute(
             'SELECT filename FROM images WHERE id = ?', (image_id,)
         ).fetchone()
         if row:
-            fname = row['filename']
+            fn = row['filename']
             db.execute('DELETE FROM images WHERE id = ?', (image_id,))
             db.commit()
             try:
-                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], fname))
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], fn))
             except OSError:
                 pass
         return redirect(url_for('index'))
 
     @app.route('/moodboards')
     def list_moodboards():
+        """Show all moodboards."""
         db = get_db()
-        moodboards = db.execute(
+        boards = db.execute(
             'SELECT id, name, description FROM moodboards'
         ).fetchall()
-        return render_template('moodboards.html', moodboards=moodboards)
+        return render_template('moodboards.html', moodboards=boards)
 
     @app.route('/moodboards/create', methods=['GET', 'POST'])
     def create_moodboard():
+        """Create a new moodboard."""
         db = get_db()
         if request.method == 'POST':
             name = request.form['name']
@@ -192,6 +216,7 @@ def create_app(test_config=None):
 
     @app.route('/moodboards/<int:mid>', methods=['GET', 'POST'])
     def moodboard_detail(mid):
+        """View and add images to a specific moodboard."""
         db = get_db()
         if request.method == 'POST':
             img_id = int(request.form['image_id'])
@@ -205,19 +230,20 @@ def create_app(test_config=None):
         mb = db.execute(
             'SELECT id, name, description FROM moodboards WHERE id = ?', (mid,)
         ).fetchone()
-        all_images = db.execute('SELECT id, filename, tags FROM images').fetchall()
-        mb_images = db.execute('''
-            SELECT images.id, images.filename, images.tags
-            FROM images JOIN moodboard_images
-              ON images.id = moodboard_images.image_id
-            WHERE moodboard_images.moodboard_id = ?
-        ''', (mid,)).fetchall()
+        all_imgs = db.execute('SELECT id, filename, tags FROM images').fetchall()
+        mb_imgs = db.execute(
+            'SELECT images.id, images.filename, images.tags '
+            'FROM images JOIN moodboard_images '
+            'ON images.id = moodboard_images.image_id '
+            'WHERE moodboard_images.moodboard_id = ?',
+            (mid,)
+        ).fetchall()
 
         return render_template(
             'moodboard_detail.html',
             moodboard=mb,
-            all_images=all_images,
-            mb_images=mb_images
+            all_images=all_imgs,
+            mb_images=mb_imgs
         )
 
     return app

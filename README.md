@@ -1,12 +1,12 @@
 # ImageLibrary
 
-[![Coverage Status](https://img.shields.io/badge/coverage-67%25-yellow)](https://github.com/NCCA/pipeline-project-Flora9822/actions)
+[![Coverage Status](https://img.shields.io/badge/coverage-84%25-green)]
 
 **ImageLibrary** is a web-based 2D image reference database inspired by PureRef. It enables users to upload, tag, search, and organize images into custom moodboards, with support for containerized deployment and one‑step setup.
 
 ## Features
 
-* **Upload & Tag**: Add images with labels for quick categorization.
+* **Upload & Tag**: Add multiple images with labels for quick categorization.
 * **Search & Sort**: Filter images by keywords (case‑insensitive, partial matches) and sort by date or filename.
 * **Moodboards**: Create, view, and manage multiple boards; add/remove images without duplicates.
 * **Responsive UI**: Mobile‑friendly design using Bootstrap.
@@ -49,7 +49,6 @@ Copy the example and configure:
 
 ```bash
 cp .env.example .env
-# Edit .env to set SECRET_KEY and other variables if needed
 ```
 
 ### 2. Initialize Database & Run Locally
@@ -79,7 +78,8 @@ flask run
 Requires Docker & Docker Compose (or Podman).
 
 ```bash
-docker-compose up -d --build
+docker-compose up -d --build or podman-compose up -d --build
+
 ```
 
 * **Ports**: Exposes port `5000` → `5000`
@@ -153,6 +153,7 @@ CI is configured via **.github/workflows/ci.yml** to run tests and upload covera
   <img src="docs/screenshots/homepage.png" alt="Home Gallery" width="300" />
   <img src="docs/screenshots/upload_form.png" alt="Upload Form" width="300" />
   <img src="docs/screenshots/moodboard_detail.png" alt="Moodboard Detail" width="300" />
+  <img src="docs/screenshots/board_page.png" alt="Board Page" width="300" />
 </div>
 
 ---
