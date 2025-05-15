@@ -1,12 +1,18 @@
 version: '3.8'
+
 services:
   web:
     build: .
+    container_name: pipeline_project_web
     ports:
       - "5000:5000"
     volumes:
-      - ./static/uploads:/pipeline_project/static/uploads
-      - ./instance:/pipeline_project/instance
+      - ./static/uploads:/app/static/uploads
+      - ./instance:/app/instance
     environment:
       FLASK_APP: app.py
       FLASK_ENV: production
+      SECRET_KEY: "${SECRET_KEY:-dev}"
+
+    command: flask run --host=0.0.0.0
+

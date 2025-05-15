@@ -177,6 +177,19 @@ git commit -m "feat: add new feature"
 
 ---
 
+## Acknowledgements
+
+This project relies on the following open-source libraries:
+
+- **Flask** (BSD-3-Clause) — https://palletsprojects.com/p/flask/  
+- **Werkzeug** (BSD-3-Clause) — https://palletsprojects.com/p/werkzeug/  
+- **Jinja2** (BSD-3-Clause) — https://palletsprojects.com/p/jinja/  
+- **Bootstrap 5** (MIT) — https://getbootstrap.com/  
+- **pytest** (MIT) — https://docs.pytest.org/  
+
+
+---
+
 ## License
 
-MIT © NCCA
+MIT © Flora
