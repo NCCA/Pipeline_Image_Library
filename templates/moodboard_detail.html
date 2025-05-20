@@ -44,26 +44,24 @@
     <p class="lead">{{ moodboard['description'] }}</p>
     {% endif %}
 
-```
-<h2 class="mt-5 mb-3">Images in This Board</h2>
-<div class="row g-4">
-  {% if mb_images %}
-    {% for img in mb_images %}
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="card card-hover h-100">
-        <img src="{{ url_for('static', filename='uploads/' ~ img['filename']) }}"
-             class="card-img-top" alt="{{ img['filename'] }}">
-        <div class="card-body">
-          <h6 class="card-title text-truncate" title="{{ img['filename'] }}">{{ img['filename'] }}</h6>
-          <p class="card-text"><small class="text-muted">Tags: {{ img['tags'] }}</small></p>
-        </div>
-      </div>
+  {% for img in mb_images %}
+    <div class="d-inline-block m-2 text-center">
+      <img src="{{ url_for('static', filename='uploads/' ~ img['filename']) }}"
+           class="img-thumbnail" style="max-width:150px" alt="{{ img['filename'] }}">
+      <div class="mt-1">{{ img['filename'] }}</div>
+      <div class="text-muted small">{{ img['tags'] }}</div>
+      <!-- removebutton -->
+      <form method="POST"
+            action="{{ url_for('remove_image_from_moodboard', mid=moodboard['id']) }}"
+            onsubmit="return confirm('Are you sure you want to remove this picture?');"
+            class="mt-1">
+        <input type="hidden" name="image_id" value="{{ img['id'] }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger">remove</button>
+      </form>
     </div>
-    {% endfor %}
   {% else %}
-    <p class="text-muted">No images added yet.</p>
-  {% endif %}
-</div>
+    <p>(There are no pictures on the board for the time being)</p>
+{% endfor %}  
 
 <hr class="my-5" />
 <h2 class="mb-3">Add an Image</h2>
@@ -81,7 +79,7 @@
     <button type="submit" class="btn btn-primary w-100">Add to Board</button>
   </div>
 </form>
-```
+
 
   </div>
 

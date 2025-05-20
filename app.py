@@ -80,24 +80,22 @@ def create_app(test_config=None):
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
+        """Handle image uploads (single or bulk), then show paginated gallery with search & sort."""
         db = get_db()
 
         if request.method == 'POST':
             tags = request.form.get('tags', '')
 
-            # 1) Bulk upload first
+            # Bulk-upload from 'images'
             if 'images' in request.files:
                 files = request.files.getlist('images')
-                # No filenames at all?
                 if not any(f.filename for f in files):
                     flash('No selected file')
                     return redirect(request.url)
-                # Any invalid extension?
                 for f in files:
                     if f and f.filename and not allowed_file(f.filename):
                         flash('Invalid file type')
                         return redirect(request.url)
-                # save them
                 for f in files:
                     fn = secure_filename(f.filename)
                     f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
@@ -108,7 +106,7 @@ def create_app(test_config=None):
                 db.commit()
                 return redirect(url_for('index'))
 
-            # 2) Fallback to single-file upload
+            # Fallback to single-file upload from 'image'
             if 'image' not in request.files:
                 flash('No file part')
                 return redirect(request.url)
@@ -119,7 +117,6 @@ def create_app(test_config=None):
             if not allowed_file(file.filename):
                 flash('Invalid file type')
                 return redirect(request.url)
-
             fn = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
             db.execute(
@@ -213,6 +210,17 @@ def create_app(test_config=None):
             db.commit()
             return redirect(url_for('moodboard_detail', mid=cur.lastrowid))
         return render_template('create_moodboard.html')
+    
+    @app.route('/moodboards/<int:mid>/delete', methods=['POST'])
+    def delete_moodboard(mid):
+        """Delete a moodboard and its associations, then redirect to list."""
+        db = get_db()
+        db.execute('DELETE FROM moodboard_images WHERE moodboard_id=?', (mid,))
+        db.execute('DELETE FROM moodboards WHERE id = ?', (mid,))
+        db.commit()
+        flash('Moodboard deleted.')
+        return redirect(url_for('list_moodboards'))
+
 
     @app.route('/moodboards/<int:mid>', methods=['GET', 'POST'])
     def moodboard_detail(mid):
@@ -246,7 +254,20 @@ def create_app(test_config=None):
             mb_images=mb_imgs
         )
 
+    @app.route('/moodboards/<int:mid>/remove', methods=['POST'])
+    def remove_image_from_moodboard(mid):
+        """Remove an image from a moodboard."""
+        db = get_db()
+        img_id = int(request.form['image_id'])
+        db.execute(
+            'DELETE FROM moodboard_images WHERE moodboard_id = ? AND image_id = ?',
+            (mid, img_id)
+        )
+        db.commit()
+        return redirect(url_for('moodboard_detail', mid=mid))
+
     return app
+
 
 if __name__ == '__main__':
     app = create_app()
