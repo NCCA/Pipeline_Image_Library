@@ -151,7 +151,7 @@ CI is configured via **.github/workflows/ci.yml** to run tests and upload covera
 
 <div align="center">
   <img src="docs/screenshots/homepage.png" alt="Home Gallery" width="300" />
-  <img src="docs/screenshots/upload_form.png" alt="Upload Form" width="300" />
+  <img src="docs/screenshots/all_moodboard.png" alt="Upload Form" width="300" />
   <img src="docs/screenshots/moodboard_detail.png" alt="Moodboard Detail" width="300" />
   <img src="docs/screenshots/board_page.png" alt="Board Page" width="300" />
 </div>
